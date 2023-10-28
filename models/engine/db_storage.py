@@ -72,7 +72,7 @@ class DBStorage:
         self.__session = Session
 
     def get(self, cls, id):
-        """A method that retrieves one object: ADDED"""
+        """A method that retrieves one object: ADDED."""
         cls_objs = self.all(cls)
         return cls_objs.get(cls.__name__ + '.' + id)
     

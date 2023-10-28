@@ -66,7 +66,7 @@ class FileStorage:
                 del self.__objects[key]
 
     def get(self, cls, id):
-        """A method that retrieves object: ADDED."""
+        """A method that retrieves object: ADDED"""
         cls_objs = self.all(cls)
         return cls_objs.get(cls.__name__ + '.' + id)
     
