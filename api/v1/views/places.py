@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Implement api obj: states"""
+"""Implement api obj for places"""
 from flask import abort, make_response, request
 from api.v1.views import app_views
 import json
