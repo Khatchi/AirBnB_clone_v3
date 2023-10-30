@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Implement API endpoints for users"""
+"""Implement API endpoints for users."""
 from flask import abort, make_response, request
 from api.v1.views import app_views
 import json
