@@ -1,85 +1,84 @@
 #!/usr/bin/python3
-"""Implement api obj: states"""
+"""api states"""
 from flask import abort, make_response, request
 from api.v1.views import app_views
-import json
-from models.state import State
 from models import storage
+from models.state import State
+import json
 
 
-@app_views.route('/states', methods=['GET'])
+@app_views.route("/states", methods=["GET"])
 def get_states():
-    """Retrieves the list of all State objs"""
-    all_states = storage.all(State).values()
-    states_list = []
-    for state in all_states:
-        states_list.append(state.to_dict())
-    response = make_response(json.dumps(states_list), 200)
-    response.headers['Content-Type'] = 'application/json'
-    return (response)
+    """retrieves all State object"""
+    allStates = storage.all(State).values()
+    statesList = []
+    for state in allStates:
+        statesList.append(state.to_dict())
+    response = make_response(json.dumps(statesList), 200)
+    response.headers["Content-Type"] = "application/json"
+    return response
 
 
-@app_views.route('/state/<state_id>', methods=['GET'])
-def get_state(state_id):
-    """Retreives state obj by id"""
-    state = storage.get(State, state_id)
+@app_views.route("/states/<id>", methods=["GET"])
+def get_state(id):
+    """retrieves State object with id"""
+    state = storage.get(State, id)
     if not state:
         abort(404)
-    res = state.to_dict()
-    response = make_response(json.dumps(res), 200)
-    response.headers['Content-Type'] = 'application/json'
-    return (response)
+    response_data = state.to_dict()
+    response = make_response(json.dumps(response_data), 200)
+    response.headers["Content-Type"] = "application/json"
+    return response
 
 
-@app_views.route('/state/<state_id>', methods=['DELETE'])
-def delete_state(state_id):
-    """Deletes a state obj by id"""
-    state = storage.get(State, state_id)
+@app_views.route("/states/<id>", methods=["DELETE"])
+def delete_state(id):
+    """delets state with id"""
+    state = storage.get(State, id)
     if not state:
         abort(404)
     storage.delete(state)
     storage.save()
-    res_obj = {}
-    response = make_response(json.dumps(res_obj), 200)
-    response.headers['Content-Type'] = 'application/json'
-    return (response)
+    res = {}
+    response = make_response(json.dumps(res), 200)
+    response.headers["Content-Type"] = "application/json"
+    return response
 
 
-@app_views.route('/states', methods=['POST'])
+@app_views.route("/states", methods=["POST"])
 def create_state():
-    """Creates a new State object"""
+    """inserts state if its valid json amd has correct key"""
+    abortMSG = "Not a JSON"
+    missingMSG = "Missing name"
+    if not request.get_json():
+        abort(400, description=abortMSG)
+    if "name" not in request.get_json():
+        abort(400, description=missingMSG)
     data = request.get_json()
-    if not data:
-        abort(400, 'Not a JSON')
-    if 'name' not in data:
-        abort(400, 'Missing name')
-
-    new_state = State(**data)
-    new_state.save()
-    res_obj = new_state.to_dict()
-    response = make_response(json.dumps(res_obj), 201)
-    response.headers['Content-Type'] = 'application/json'
-    return (response)
+    instObj = State(**data)
+    instObj.save()
+    res = instObj.to_dict()
+    response = make_response(json.dumps(res), 201)
+    response.headers["Content-Type"] = "application/json"
+    return response
 
 
-@app_views.route('/states/<state_id>', methods=['PUT'])
-def update_state(state_id):
-    """Updates a State object by ID"""
-    state = storage.get(State, state_id)
-    if state is None:
+@app_views.route("/states/<id>", methods=["PUT"])
+def put_state(id):
+    """update a state by id"""
+    abortMSG = "Not a JSON"
+    state = storage.get(State, id)
+    ignoreKeys = ["id", "created_at", "updated_at"]
+    if not state:
         abort(404)
-
+    if not request.get_json():
+        abort(400, description=abortMSG)
     data = request.get_json()
-    if not data:
-        abort(400, 'Not a JSON')
-
-    # Update the State object with the new data
     for key, value in data.items():
-        if key not in ['id', 'created_at', 'updated_at']:
+        if key not in ignoreKeys:
             setattr(state, key, value)
-    state.save()
-
-    res_obj = state.to_dict()
-    response = make_response(json.dumps(res_obj), 200)
-    response.headers['Content-Type'] = 'application/json'
-    return (response)
+    storage.save()
+    res = state.to_dict()
+    response = make_response(json.dumps(res), 200)
+    response.headers["Content-Type"] = "application/json"
+    return response
