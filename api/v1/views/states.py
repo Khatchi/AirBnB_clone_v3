@@ -8,24 +8,27 @@ from models import storage
 
 
 @app_views.route('/states', methods=['GET'])
-@app_views.route('/states/<state_id>', methods=['GET'])
-def get_states(state_id=None):
-    """Retrieves the list of all State objects or a specific State by ID"""
-    if state_id:
-        state = storage.get(State, state_id)
-        if not state:
-            abort(404)
-        res_obj = state.to_dict()
-    else:
-        all_states = storage.all(State).values()
-        states_list = []
-        for state in all_states:
-            states_list.append(state.to_dict())
-        res_obj = states_list
-
-    response = make_response(json.dumps(res_obj), 200)
+def get_states():
+    """Retrieves the list of all State objs"""
+    all_states = storage.all(State).values()
+    states_list = []
+    for state in all_states:
+        states_list.append(state.to_dict())
+    response = make_response(json.dumps(states_list), 200)
     response.headers['Content-Type'] = 'application/json'
-    return response
+    return (response)
+
+
+@app_views.route('/state/<state_id>', methods=['GET'])
+def get_state(state_id):
+    """Retreives state obj by id"""
+    state = storage.get(State, state_id)
+    if not state:
+        abort(404)
+    res = state.to_dict()
+    response = make_response(json.dumps(res), 200)
+    response.headers['Content-Type'] = 'application/json'
+    return (response)
 
 
 @app_views.route('/state/<state_id>', methods=['DELETE'])
