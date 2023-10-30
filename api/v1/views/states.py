@@ -74,7 +74,7 @@ def update_state(state_id):
     for key, value in data.items():
         if key not in ['id', 'created_at', 'updated_at']:
             setattr(state, key, value)
-    state.save()
+    storage.save()
 
     res_obj = state.to_dict()
     response = make_response(json.dumps(res_obj), 200)
