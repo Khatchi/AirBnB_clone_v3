@@ -5,11 +5,15 @@ from api.v1.views import app_views
 from models import storage
 from os import getenv
 import json
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.register_blueprint(app_views)
 # Registers app_views blueprint
 app.url_map.strict_slashes = False
+
+# Create a CORS instance with wide-open permissions.
+cors = CORS(app, resources={r'/api/*': {'origins': '0.0.0.0'}})
 
 
 @app.teardown_appcontext
