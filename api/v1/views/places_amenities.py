@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""api place_amenities"""
+"""Implemented api endpoints for place-amenities"""
 from flask import abort, make_response, request
 from api.v1.views import app_views
 from models import storage
