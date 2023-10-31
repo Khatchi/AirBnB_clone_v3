@@ -1,60 +1,84 @@
-from flask import abort, make_response
+#!/usr/bin/python3
+"""api place_amenities"""
+from flask import abort, make_response, request
 from api.v1.views import app_views
 from models import storage
 from models.place import Place
 from models.amenity import Amenity
+from models.review import Review
+from models.user import User
 import json
-from flask_cors import CORS
+from os import getenv
 
-CORS(app_views, resources={r"/api/v1/places_amenities/*": {"origins": "0.0.0.0"}})
 
-@app_views.route('/places/<place_id>/amenities', methods=['GET'])
-def get_place_amenities(place_id):
-    """Retrieves the list of all Amenity objects linked to a Place"""
-    place = storage.get(Place, place_id)
-    if place is None:
+storage_t = getenv("HBNB_TYPE_STORAGE")
+
+
+@app_views.route("/places/<id_place>/amenities", methods=["GET"])
+def get_place_amenities(id_place):
+    """retrieves all amenities of place id object"""
+    place = storage.get(Place, id_place)
+    amenitiesList = []
+    if not place:
         abort(404)
-    amenities_list = []
-    if storage.get_type() == "db":
-        amenities_list = [amenity.to_dict() for amenity in place.amenities]
-    elif storage.get_type() == "file":
-        for amenity_id in place.amenity_ids:
-            amenity = storage.get(Amenity, amenity_id)
-            if amenity:
-                amenities_list.append(amenity.to_dict())
-    return make_response(json.dumps(amenities_list), 200)
+    if storage_t == "db":
+        for amenity in place.amenities:
+            amenitiesList.append(amenity.to_dict())
+    else:
+        for id in place.amenity_ids:
+            amenity = storage.get(Amenity, id)
+            amenitiesList.append(amenity.to_dict())
+    res = amenitiesList
+    response = make_response(json.dumps(res), 200)
+    response.headers["Content-Type"] = "application/json"
+    return response
 
-@app_views.route('/places/<place_id>/amenities/<amenity_id>', methods=['DELETE'])
+
+@app_views.route("/places/<place_id>/amenities/<amenity_id>",
+                 methods=["DELETE"])
 def delete_place_amenity(place_id, amenity_id):
-    """Deletes an Amenity object linked to a Place"""
+    """deletes amenity link to place"""
     place = storage.get(Place, place_id)
+    if not place:
+        abort(404)
     amenity = storage.get(Amenity, amenity_id)
-    if place is None or amenity is None:
+    if not amenity:
         abort(404)
-    if amenity not in place.amenities and amenity_id not in place.amenity_ids:
-        abort(404)
-    if storage.get_type() == "db":
+    if storage_t == "db":
+        if amenity not in place.amenities:
+            abort(404)
         place.amenities.remove(amenity)
-    elif storage.get_type() == "file":
+    else:
+        if amenity_id not in place.amenity_ids:
+            abort(404)
         place.amenity_ids.remove(amenity_id)
     storage.save()
-    return make_response(json.dumps({}), 200)
+    res = {}
+    response = make_response(json.dumps(res), 200)
+    response.headers["Content-Type"] = "application/json"
+    return response
 
-@app_views.route('/places/<place_id>/amenities/<amenity_id>', methods=['POST'])
-def link_place_amenity(place_id, amenity_id):
-    """Links an Amenity object to a Place"""
+
+@app_views.route("/places/<place_id>/amenities/<amenity_id>", methods=["POST"])
+def create_place_amenity(place_id, amenity_id):
+    """links amenity to place"""
     place = storage.get(Place, place_id)
-    amenity = storage.get(Amenity, amenity_id)
-    if place is None or amenity is None:
+    if not place:
         abort(404)
-    if amenity in place.amenities or amenity_id in place.amenity_ids:
-        if storage.get_type() == "db":
-            return make_response(json.dumps(amenity.to_dict()), 200)
-        elif storage.get_type() == "file":
-            return make_response(json.dumps(amenity.to_dict()), 200)
-    if storage.get_type() == "db":
+    amenity = storage.get(Amenity, amenity_id)
+    if not amenity:
+        abort(404)
+    if storage_t == "db":
+        if amenity in place.amenities:
+            response = make_response(json.dumps(amenity.to_dict()), 200)
+            response.headers["Content-Type"] = "application/json"
+            return response
         place.amenities.append(amenity)
-    elif storage.get_type() == "file":
+    else:
+        if amenity_id in place.amenity_ids:
+            return amenity, 200
         place.amenity_ids.append(amenity_id)
     storage.save()
-    return make_response(json.dumps(amenity.to_dict()), 201)
+    response = make_response(json.dumps(amenity.to_dict()), 201)
+    response.headers["Content-Type"] = "application/json"
+    return response
